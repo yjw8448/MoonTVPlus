@@ -70,6 +70,7 @@ function SearchPageClient() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const submittedSearchQuery = searchParams.get('q')?.trim() || '';
   const currentQueryRef = useRef<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -360,9 +361,9 @@ function SearchPageClient() {
     if (!exactSearch) return searchResults;
 
     return searchResults.filter((item) =>
-      titleContainsQuery(item.title, currentQueryRef.current)
+      titleContainsQuery(item.title, submittedSearchQuery)
     );
-  }, [searchResults, searchQuery, exactSearch]);
+  }, [searchResults, submittedSearchQuery, exactSearch]);
 
   // 聚合后的结果（按标题和年份分组）
   const aggregatedResults = useMemo(() => {

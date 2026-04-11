@@ -250,7 +250,14 @@ export default function VirtualScrollableGrid({
       resizeObserver?.disconnect();
       if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
     };
-  }, [children.length, overscanRows, mobileColumns, minItemWidth, maxContentWidth]);
+  }, [
+    children.length,
+    gridClassName,
+    overscanRows,
+    mobileColumns,
+    minItemWidth,
+    maxContentWidth,
+  ]);
 
   const columns = layout.columns;
   const totalRows = layout.totalRows;
