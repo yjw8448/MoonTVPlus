@@ -1,0 +1,63 @@
+name: 同步上游至主分支
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 */6 * * *"
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/mtvpls/MoonTVPlus.git || true
+          git fetch upstream main
+
+      - name: Sync code but preserve all local workflows
+        run: |
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Already contains latest upstream/main"
+            exit 0
+          fi
+
+          mkdir -p /tmp/keep
+          if [ -d .github/workflows ]; then
+            cp -a .github/workflows /tmp/keep/workflows
+          fi
+
+          git reset --hard upstream/main
+
+          rm -rf .github/workflows
+          mkdir -p .github
+          if [ -d /tmp/keep/workflows ]; then
+            cp -a /tmp/keep/workflows .github/workflows
+          fi
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No non-workflow changes to push."
+            exit 0
+          fi
+
+          git commit -m "chore: sync upstream code and preserve local workflows"
+          git push origin HEAD:main --force-with-lease
